@@ -1,0 +1,48 @@
+name: notiva
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  flutter:
+    sdk: flutter
+  math_expressions: ^2.2.0
+  image_picker: ^1.1.2
+  code_text_field: ^1.1.0 
+  highlight: ^0.7.0
+  cupertino_icons: ^1.0.8
+  flutter_code_editor: ^0.3.2
+  flutter_highlight: ^0.7.0
+  shared_preferences: ^2.0.18
+
+
+  #flutter_code_editor: ^0.4.1
+  #shared_preferences: ^2.0.15
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  # To add custom fonts to your application, add a fonts section here.
+  #fonts:
+  #  - family: SourceCodePro
+  #    fonts:
+  #      - asset: assets/fonts/SourceCodePro-Regular.ttf
+  #      - asset: assets/fonts/SourceCodePro-Bold.ttf
+  #        weight: 700
