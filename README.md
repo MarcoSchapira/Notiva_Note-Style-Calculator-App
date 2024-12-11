@@ -1,16 +1,30 @@
-# notiva
+# Notiva
 
-A new Flutter project.
+## Overview
+**Notiva** is a **note-style calculator app** that blends the simplicity of note-taking with the power of a calculator. Whether you're jotting down ideas or solving equations, Notiva keeps it straightforward and efficient.
+
+## Features
+- **Note-Taking:** Use the app as a simple, intuitive note-taking tool.
+- **Inline Calculations:** Write equations, and their results are automatically displayed at the end of the line.
+- **Variable Support:** Define variables (e.g., `myVar = 10`) and use them in other equations for seamless calculations.
+
+## Project Details
+The goal of this project was to develop a functional, user-friendly **note-style calculator with variables** in the shortest time possible. With the assistance of **ChatGPT-4o**, Notiva was built from **start to finish in under 6 hours**.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+### Clone the Repository
+Clone the repository to your local machine:
+```bash
+git clone https://github.com/MarcoSchapira/Notiva_Note-Style-Calculator-App.git
+cd Notiva_Note-Style-Calculator-App
+```
+### Install Dependencies
+```bash
+flutter pub get
+```
+### Run The App
+```bash
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
