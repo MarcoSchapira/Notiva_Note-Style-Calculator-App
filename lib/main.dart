@@ -11,33 +11,9 @@ class NotesApp extends StatefulWidget {
 }
 
 class _NotesAppState extends State<NotesApp> {
-  bool _isDayTheme = true;
-
   @override
   void initState() {
     super.initState();
-    _loadThemePreference();
-  }
-
-  // Load theme preference from SharedPreferences
-  Future<void> _loadThemePreference() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDayTheme = prefs.getBool('isDayTheme') ?? true;
-    });
-  }
-
-  // Save theme preference to SharedPreferences
-  Future<void> _saveThemePreference() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDayTheme', _isDayTheme);
-  }
-
-  void _toggleTheme() {
-    setState(() {
-      _isDayTheme = !_isDayTheme;
-    });
-    _saveThemePreference();
   }
 
   @override
@@ -45,20 +21,14 @@ class _NotesAppState extends State<NotesApp> {
     return MaterialApp(
       title: 'Full Page Notes App',
       debugShowCheckedModeBanner: false,
-      theme: _isDayTheme ? ThemeData.light() : ThemeData.dark(),
-      home: NotePage(
-        isDayTheme: _isDayTheme,
-        toggleTheme: _toggleTheme,
-      ),
+      // The home widget itself handles loading/saving theme and notes
+      home: NotePage(),
     );
   }
 }
 
 class NotePage extends StatefulWidget {
-  final bool isDayTheme;
-  final VoidCallback toggleTheme;
-
-  NotePage({required this.isDayTheme, required this.toggleTheme});
+  NotePage();
 
   @override
   _NotePageState createState() => _NotePageState();
@@ -82,7 +52,21 @@ class _NotePageState extends State<NotePage> {
   @override
   void initState() {
     super.initState();
-    _isDayTheme = widget.isDayTheme;
+    _loadThemePreference().then((_) {
+      _loadNotes().then((_) {
+        // Once notes are loaded, initialize code controller
+        _initializeCodeControllerWithCurrentVars();
+
+        // Listen for newline entries after controller is set
+        _codeController.addListener(() {
+          // Only update results if a new line is added
+          if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
+            _updateResults();
+          }
+          _oldCodeText = _codeController.text;
+        });
+      });
+    });
 
     // Synchronize scrolling between left and right columns
     _leftScrollController.addListener(() {
@@ -95,18 +79,45 @@ class _NotePageState extends State<NotePage> {
         _leftScrollController.jumpTo(_rightScrollController.offset);
       }
     });
+  }
 
-    // Initial controller with variable highlighting
-    _initializeCodeControllerWithCurrentVars();
-
-    // Listen for newline entries
-    _codeController.addListener(() {
-      // Only update results if a new line is added
-      if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
-        _updateResults();
-      }
-      _oldCodeText = _codeController.text;
+  // Load theme preference from SharedPreferences
+  Future<void> _loadThemePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool savedTheme = prefs.getBool('isDayTheme') ?? true;
+    setState(() {
+      _isDayTheme = savedTheme;
     });
+  }
+
+  // Save theme preference to SharedPreferences
+  Future<void> _saveThemePreference() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDayTheme', _isDayTheme);
+  }
+
+  void _toggleTheme() {
+    setState(() {
+      _isDayTheme = !_isDayTheme;
+    });
+    _saveThemePreference();
+  }
+
+  // Load notes from SharedPreferences
+  Future<void> _loadNotes() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String savedNotes = prefs.getString('notes') ?? '';
+    setState(() {
+      _noteController.text = savedNotes;
+      _codeController.text = savedNotes;
+      _oldCodeText = savedNotes;
+    });
+  }
+
+  // Save notes to SharedPreferences
+  Future<void> _saveNotes() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('notes', _codeController.text);
   }
 
   void _initializeCodeControllerWithCurrentVars({String? text}) {
@@ -118,18 +129,24 @@ class _NotePageState extends State<NotePage> {
     TextSelection oldSelection = _codeController.selection;
     double oldOffset = _leftScrollController.hasClients ? _leftScrollController.offset : 0.0;
 
+    // Keep the current text (loaded notes) or use provided text
+    String currentText = text ?? _codeController.text;
+
     _codeController = CodeController(
-      text: text ?? _codeController.text,
+      text: currentText,
       stringMap: {
         ...myVarStyles,
       },
     );
 
+    // Add listener after re-initializing
     _codeController.addListener(() {
       if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
         _updateResults();
       }
       _oldCodeText = _codeController.text;
+      // Save notes whenever text changes
+      _saveNotes();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -196,7 +213,7 @@ class _NotePageState extends State<NotePage> {
       results = updatedResults;
       myVar = updatedVars;
       _noteController.text = _codeController.text;
-      _initializeCodeControllerWithCurrentVars();
+      _initializeCodeControllerWithCurrentVars(text: _codeController.text);
     });
   }
 
@@ -208,13 +225,6 @@ class _NotePageState extends State<NotePage> {
     } else {
       return value.toStringAsFixed(2);
     }
-  }
-
-  void _toggleThemeLocal() {
-    setState(() {
-      _isDayTheme = !_isDayTheme;
-    });
-    widget.toggleTheme();
   }
 
   @override
@@ -243,6 +253,7 @@ class _NotePageState extends State<NotePage> {
                           _codeController.clear();
                           _dividerPosition = _initialDividerPosition;
                         });
+                        _saveNotes(); // Save after clearing
                       },
                       style: TextButton.styleFrom(
                         backgroundColor:
@@ -285,7 +296,7 @@ class _NotePageState extends State<NotePage> {
                         color: _isDayTheme ? Colors.black : Colors.white,
                       ),
                       onPressed: () {
-                        _toggleThemeLocal();
+                        _toggleTheme();
                       },
                     ),
                   ),

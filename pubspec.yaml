@@ -35,6 +35,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/DALL-E-2024-12-08-app-icon.png" # Path to your app icon
 
 flutter:
   uses-material-design: true
