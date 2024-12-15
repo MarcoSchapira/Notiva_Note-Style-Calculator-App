@@ -1,4 +1,4 @@
-package com.example.notiva
+package com.marcoschapira.notiva
 
 import io.flutter.embedding.android.FlutterActivity
 

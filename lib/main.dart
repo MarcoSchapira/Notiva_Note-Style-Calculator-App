@@ -50,36 +50,38 @@ class _NotePageState extends State<NotePage> {
   String _oldCodeText = '';
 
   @override
-  void initState() {
-    super.initState();
-    _loadThemePreference().then((_) {
-      _loadNotes().then((_) {
-        // Once notes are loaded, initialize code controller
-        _initializeCodeControllerWithCurrentVars();
+void initState() {
+  super.initState();
+  _loadThemePreference().then((_) {
+    _loadNotes().then((_) {
+      // After notes are loaded, update results once to populate myVar
+      _updateResults(); 
+      
+      // Now that myVar is populated, initialize the code controller with the updated vars
+      _initializeCodeControllerWithCurrentVars();
 
-        // Listen for newline entries after controller is set
-        _codeController.addListener(() {
-          // Only update results if a new line is added
-          if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
-            _updateResults();
-          }
-          _oldCodeText = _codeController.text;
-        });
+      // Set up the listener after everything is initialized
+      _codeController.addListener(() {
+        if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
+          _updateResults();
+        }
+        _oldCodeText = _codeController.text;
       });
     });
+  });
 
-    // Synchronize scrolling between left and right columns
-    _leftScrollController.addListener(() {
-      if (_leftScrollController.offset != _rightScrollController.offset) {
-        _rightScrollController.jumpTo(_leftScrollController.offset);
-      }
-    });
-    _rightScrollController.addListener(() {
-      if (_rightScrollController.offset != _leftScrollController.offset) {
-        _leftScrollController.jumpTo(_rightScrollController.offset);
-      }
-    });
-  }
+  // Synchronize scrolling between left and right columns
+  _leftScrollController.addListener(() {
+    if (_leftScrollController.offset != _rightScrollController.offset) {
+      _rightScrollController.jumpTo(_leftScrollController.offset);
+    }
+  });
+  _rightScrollController.addListener(() {
+    if (_rightScrollController.offset != _leftScrollController.offset) {
+      _leftScrollController.jumpTo(_rightScrollController.offset);
+    }
+  });
+}
 
   // Load theme preference from SharedPreferences
   Future<void> _loadThemePreference() async {
