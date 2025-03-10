@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'dart:ui';
 import 'package:math_expressions/math_expressions.dart';
 import 'package:code_text_field/code_text_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,40 +50,59 @@ class _NotePageState extends State<NotePage> {
 
   bool _isDayTheme = true;
   String _oldCodeText = '';
+  
+  final List<Map<String, String>> _instructions = [
+    {
+      'title': 'Basic Calculations',
+      'content': 'Simply type any mathematical expression and press Enter:\n5 + 10 * 2'
+    },
+    {
+      'title': 'Variables',
+      'content': 'Assign values to variables using the equals sign:\nx = 10\ny = 5\nx + y'
+    },
+    {
+      'title': 'Comments',
+      'content': 'Add comments using double slashes:\n5 * 10 // This is my calculation'
+    },
+    {
+      'title': 'Functions',
+      'content': 'Use mathematical functions:\nsin(30)\nsqrt(16)\nlog(100)'
+    },
+  ];
 
   @override
-void initState() {
-  super.initState();
-  _loadThemePreference().then((_) {
-    _loadNotes().then((_) {
-      // After notes are loaded, update results once to populate myVar
-      _updateResults(); 
-      
-      // Now that myVar is populated, initialize the code controller with the updated vars
-      _initializeCodeControllerWithCurrentVars();
+  void initState() {
+    super.initState();
+    _loadThemePreference().then((_) {
+      _loadNotes().then((_) {
+        // After notes are loaded, update results once to populate myVar
+        _updateResults(); 
+        
+        // Now that myVar is populated, initialize the code controller with the updated vars
+        _initializeCodeControllerWithCurrentVars();
 
-      // Set up the listener after everything is initialized
-      _codeController.addListener(() {
-        if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
-          _updateResults();
-        }
-        _oldCodeText = _codeController.text;
+        // Set up the listener after everything is initialized
+        _codeController.addListener(() {
+          if (_codeController.text.endsWith('\n') && _codeController.text != _oldCodeText) {
+            _updateResults();
+          }
+          _oldCodeText = _codeController.text;
+        });
       });
     });
-  });
 
-  // Synchronize scrolling between left and right columns
-  _leftScrollController.addListener(() {
-    if (_leftScrollController.offset != _rightScrollController.offset) {
-      _rightScrollController.jumpTo(_leftScrollController.offset);
-    }
-  });
-  _rightScrollController.addListener(() {
-    if (_rightScrollController.offset != _leftScrollController.offset) {
-      _leftScrollController.jumpTo(_rightScrollController.offset);
-    }
-  });
-}
+    // Synchronize scrolling between left and right columns
+    _leftScrollController.addListener(() {
+      if (_leftScrollController.offset != _rightScrollController.offset) {
+        _rightScrollController.jumpTo(_leftScrollController.offset);
+      }
+    });
+    _rightScrollController.addListener(() {
+      if (_rightScrollController.offset != _leftScrollController.offset) {
+        _leftScrollController.jumpTo(_rightScrollController.offset);
+      }
+    });
+  }
 
   // Load theme preference from SharedPreferences
   Future<void> _loadThemePreference() async {
@@ -239,6 +260,628 @@ void initState() {
     }
   }
 
+  // Show Settings Modal
+  void _showSettingsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          padding: const EdgeInsets.only(top: 16),
+          decoration: BoxDecoration(
+            color: _isDayTheme 
+              ? Colors.white
+              : Colors.grey[900],
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle Bar
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              SizedBox(height: 16),
+              // Title
+              Text(
+                'Settings',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _isDayTheme ? Colors.black : Colors.white,
+                ),
+              ),
+              SizedBox(height: 15),
+              Divider(height: 1, thickness: 0.5, color: Colors.grey),
+              
+              // Dark Mode Toggle
+              ListTile(
+                leading: Icon(
+                  _isDayTheme 
+                    ? Icons.wb_sunny_outlined
+                    : Icons.nightlight_outlined,
+                  color: _isDayTheme ? Colors.black : Colors.white,
+                ),
+                title: Text(
+                  'Dark Mode',
+                  style: TextStyle(
+                    color: _isDayTheme ? Colors.black : Colors.white,
+                  ),
+                ),
+                trailing: Switch(
+                  value: !_isDayTheme,
+                  onChanged: (bool value) {
+                    Navigator.pop(context);
+                    _toggleTheme();
+                  },
+                  activeColor: Colors.blue,
+                ),
+              ),
+              Divider(height: 1, thickness: 0.5, color: Colors.grey),
+              
+              // Instructions
+              ListTile(
+                leading: Icon(
+                  Icons.info_outline,
+                  color: _isDayTheme ? Colors.black : Colors.white,
+                ),
+                title: Text(
+                  'Instructions',
+                  style: TextStyle(
+                    color: _isDayTheme ? Colors.black : Colors.white,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showInstructionsModal(context);
+                },
+              ),
+              Divider(height: 1, thickness: 0.5, color: Colors.grey),
+              
+              // Feedback
+              ListTile(
+                leading: Icon(
+                  Icons.chat_bubble_outline,
+                  color: _isDayTheme ? Colors.black : Colors.white,
+                ),
+                title: Text(
+                  'Feedback',
+                  style: TextStyle(
+                    color: _isDayTheme ? Colors.black : Colors.white,
+                  ),
+                ),
+                trailing: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showFeedbackComingSoonModal(context);
+                },
+              ),
+              SizedBox(height: 16),
+              
+              // Done button
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: _isDayTheme ? Colors.white : Colors.grey[900],
+                    side: BorderSide(
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      width: 1.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.0)),
+                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: Text(
+                    'Done',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // Helper widget for settings items
+  Widget _buildSettingsItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required Widget trailing,
+    VoidCallback? onTap,
+    bool topRadius = false,
+    bool bottomRadius = false,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(topRadius ? 16 : 0),
+            topRight: Radius.circular(topRadius ? 16 : 0),
+            bottomLeft: Radius.circular(bottomRadius ? 16 : 0),
+            bottomRight: Radius.circular(bottomRadius ? 16 : 0),
+          ),
+        ),
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Row(
+                children: [
+                  // Icon with background
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: iconColor.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Icon(
+                        icon,
+                        size: 18,
+                        color: iconColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 12),
+                  // Title
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: _isDayTheme ? Colors.black87 : Colors.white,
+                    ),
+                  ),
+                  Spacer(),
+                  // Trailing widget
+                  trailing,
+                ],
+              ),
+            ),
+            // Only add divider if not the last item
+            if (!bottomRadius)
+              Padding(
+                padding: const EdgeInsets.only(left: 60),
+                child: Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: _isDayTheme 
+                    ? CupertinoColors.systemGrey5
+                    : CupertinoColors.systemGrey4.withOpacity(0.3),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Show Instructions Modal
+  void _showInstructionsModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          height: MediaQuery.of(context).size.height * 0.7,
+          padding: const EdgeInsets.only(top: 16),
+          decoration: BoxDecoration(
+            color: _isDayTheme 
+              ? Colors.white
+              : Colors.grey[900],
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            children: [
+              // Handle Bar
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Title
+              Text(
+                'Instructions',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: _isDayTheme ? Colors.black : Colors.white,
+                ),
+              ),
+              SizedBox(height: 15),
+              Divider(height: 1, thickness: 0.5, color: Colors.grey),
+              // Scrollable content
+              Expanded(
+                child: Container(
+                  margin: EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: Scrollbar(
+                    radius: Radius.circular(3),
+                    thumbVisibility: true,
+                    child: ListView(
+                      padding: EdgeInsets.all(10),
+                      children: [
+                        _buildInstructionSection(
+                          'Keyboard Shortcuts',
+                          [
+                            TextSpan(text: 'Tap results column on right to close keyboard'),
+                          ],
+                        ),
+                        Divider(height: 24, thickness: 0.5, color: Colors.grey.withOpacity(0.5)),
+                        // Basic Calculations section
+                        _buildInstructionSection(
+                          'Basic Calculations',
+                          [
+                            TextSpan(text: 'Simply type any mathematical expression and press Enter:\n'),
+                            TextSpan(text: '5 + 10 * 2'),
+                          ],
+                        ),
+                        
+                        Divider(height: 24, thickness: 0.5, color: Colors.grey.withOpacity(0.5)),
+                        
+                        // Variables section
+                        _buildInstructionSection(
+                          'Variables',
+                          [
+                            TextSpan(text: 'Assign values to variables using the equals sign:\n'),
+                            TextSpan(
+                              text: 'x',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: ' = 10\n'),
+                            TextSpan(
+                              text: 'y',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: ' = 5\n'),
+                            TextSpan(
+                              text: 'x',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(text: ' + '),
+                            TextSpan(
+                              text: 'y',
+                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        
+                        Divider(height: 24, thickness: 0.5, color: Colors.grey.withOpacity(0.5)),
+                        
+                        // Comments section
+                        _buildInstructionSection(
+                          'Comments',
+                          [
+                            TextSpan(text: 'Add comments using double slashes:\n'),
+                            TextSpan(text: '5 * 10 '),
+                            TextSpan(
+                              text: '// This is my calculation',
+                              style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        
+                        Divider(height: 24, thickness: 0.5, color: Colors.grey.withOpacity(0.5)),
+                        
+                        // Functions section
+                        _buildInstructionSection(
+                          'Functions',
+                          [
+                            TextSpan(text: 'Use mathematical functions:\n'),
+                            TextSpan(text: 'sin(30)\nsqrt(16)\nlog(100)'),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Done button
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24, top: 8),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: _isDayTheme ? Colors.white : Colors.grey[900],
+                    side: BorderSide(
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      width: 1.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.0)),
+                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: Text(
+                    'Done',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // Helper method to build instruction sections
+  Widget _buildInstructionSection(String title, List<TextSpan> content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: _isDayTheme ? Colors.black : Colors.white,
+          ),
+        ),
+        SizedBox(height: 10),
+        Container(
+          width: double.infinity,
+          padding: EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: _isDayTheme 
+              ? Colors.grey[100]
+              : Colors.grey[850],
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: _isDayTheme 
+                ? Colors.grey[300]!
+                : Colors.grey[700]!,
+              width: 1,
+            ),
+          ),
+          child: RichText(
+            text: TextSpan(
+              style: TextStyle(
+                fontFamily: 'Menlo',
+                fontSize: 15,
+                height: 1.5,
+                color: _isDayTheme 
+                  ? Colors.black
+                  : Colors.white,
+              ),
+              children: content,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Show Feedback Coming Soon Modal
+  void _showFeedbackComingSoonModal(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) => BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          padding: const EdgeInsets.only(top: 16),
+          decoration: BoxDecoration(
+            color: _isDayTheme 
+              ? Colors.white
+              : Colors.grey[900],
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Handle Bar
+              Container(
+                width: 36,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: Colors.grey,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Decorative orbit circles
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  // Outer orbit
+                  Container(
+                    width: 140,
+                    height: 140,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _isDayTheme 
+                          ? Colors.grey[300]!
+                          : Colors.grey[700]!,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  // Middle orbit
+                  Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _isDayTheme 
+                          ? Colors.grey[300]!
+                          : Colors.grey[700]!,
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  // Rocket with glowing effect
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          Colors.orange.withOpacity(0.2),
+                          Colors.transparent
+                        ],
+                        radius: 0.7,
+                      ),
+                    ),
+                    child: Center(
+                      child: Transform.rotate(
+                        angle: 0.8, // Angle in radians (about 45 degrees)
+                        child: Icon(
+                          Icons.rocket_launch,
+                          size: 40,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Small planet 1
+                  Positioned(
+                    top: 10,
+                    right: 20,
+                    child: Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  // Small planet 2
+                  Positioned(
+                    bottom: 20,
+                    left: 15,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 30),
+              // Title with gradient
+              ShaderMask(
+                shaderCallback: (Rect bounds) {
+                  return LinearGradient(
+                    colors: [Colors.orange, Colors.red],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ).createShader(bounds);
+                },
+                child: Text(
+                  'Coming Soon!',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(height: 16),
+              // Subtitle
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 30),
+                child: Text(
+                  'We\'re working on making NOTIVA even better.\nFeedback feature will be available soon!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: _isDayTheme ? Colors.black.withOpacity(0.7) : Colors.white.withOpacity(0.7),
+                  ),
+                ),
+              ),
+              SizedBox(height: 30),
+              // Done button
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: TextButton.styleFrom(
+                    backgroundColor: _isDayTheme ? Colors.white : Colors.grey[900],
+                    side: BorderSide(
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      width: 1.0,
+                    ),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4.0)),
+                    padding: EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                  ),
+                  child: Text(
+                    'Done',
+                    style: TextStyle(
+                      fontSize: 16.0,
+                      color: _isDayTheme ? Colors.black : Colors.white,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
@@ -298,17 +941,16 @@ void initState() {
                     ),
                   ),
                   Spacer(),
+                  // Replace theme toggle with settings icon
                   Padding(
                     padding: const EdgeInsets.only(right: 16.0),
                     child: IconButton(
                       icon: Icon(
-                        _isDayTheme
-                            ? Icons.wb_sunny_outlined
-                            : Icons.nightlight_outlined,
+                        Icons.settings_outlined,
                         color: _isDayTheme ? Colors.black : Colors.white,
                       ),
                       onPressed: () {
-                        _toggleTheme();
+                        _showSettingsModal(context);
                       },
                     ),
                   ),
