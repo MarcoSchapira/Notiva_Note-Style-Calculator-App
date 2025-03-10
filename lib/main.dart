@@ -123,6 +123,7 @@ void initState() {
   }
 
   void _initializeCodeControllerWithCurrentVars({String? text}) {
+
     Map<String, TextStyle> myVarStyles = {
       for (var key in myVar.keys)
         key: TextStyle(fontWeight: FontWeight.bold, color: Colors.blue),
@@ -136,6 +137,10 @@ void initState() {
 
     _codeController = CodeController(
       text: currentText,
+      patternMap: {
+        r"\B//.*\b":
+            TextStyle(fontWeight: FontWeight.bold, color: Colors.green),
+      },
       stringMap: {
         ...myVarStyles,
       },
@@ -173,10 +178,15 @@ void initState() {
     List<String> updatedResults = [];
     Map<String, double> updatedVars = {};
     Parser parser = Parser();
+    String newComment = '';
+    List<String> updatedComments = [];
 
     for (int i = 0; i < lines.length; i++) {
       String line = lines[i];
       if (line.contains('//')) {
+        newComment = line.substring(line.indexOf('//'), line.length).trim();
+        updatedComments.add(newComment);
+
         line = line.substring(0, line.indexOf('//'));
       }
       line = line.trim();

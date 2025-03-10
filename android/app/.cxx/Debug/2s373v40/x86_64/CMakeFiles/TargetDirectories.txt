@@ -1,0 +1,2 @@
+/Users/marcoschapira/Documents/AB_notemath/notiva/android/app/.cxx/Debug/2s373v40/x86_64/CMakeFiles/edit_cache.dir
+/Users/marcoschapira/Documents/AB_notemath/notiva/android/app/.cxx/Debug/2s373v40/x86_64/CMakeFiles/rebuild_cache.dir
