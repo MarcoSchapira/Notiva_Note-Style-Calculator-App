@@ -15,7 +15,7 @@ The goal of this project was to develop a functional, user-friendly **note-style
   <img src="assets/Simulator Screenshot - iPhone 16 Plus - 2025-11-04 at 14.53.13.png" alt="Notiva Screenshot 1" width="24%" />
   <img src="assets/Simulator Screenshot - iPhone 16 Plus - 2025-11-04 at 15.08.28.png" alt="Notiva Screenshot 2" width="24%" />
   <img src="assets/Simulator Screenshot - iPhone 16 Plus - 2025-11-04 at 14.54.03.png" alt="Notiva Screenshot 3" width="24%" />
-  <img src="assets/Simulator Screenshot - iPhone 16 Plus - 2025-11-04 at 14.54.26" alt="Notiva Screenshot 4" width="24%" />
+  <img src="assets/Simulator Screenshot - iPhone 16 Plus - 2025-11-04 at 14.54.26.png" alt="Notiva Screenshot 4" width="24%" />
 </p>
 
 ## Getting Started
