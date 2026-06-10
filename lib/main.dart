@@ -48,7 +48,7 @@ class _NotePageState extends State<NotePage> {
   List<String> results = [];
   Map<String, double> myVar = {};
 
-  bool _isDayTheme = true;
+  bool _isDayTheme = false;
   String _oldCodeText = '';
   
   final List<Map<String, String>> _instructions = [
@@ -88,6 +88,8 @@ class _NotePageState extends State<NotePage> {
           }
           _oldCodeText = _codeController.text;
         });
+
+        _maybeShowFirstLaunchInstructions();
       });
     });
 
@@ -107,7 +109,7 @@ class _NotePageState extends State<NotePage> {
   // Load theme preference from SharedPreferences
   Future<void> _loadThemePreference() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool savedTheme = prefs.getBool('isDayTheme') ?? true;
+    bool savedTheme = prefs.getBool('isDayTheme') ?? false;
     setState(() {
       _isDayTheme = savedTheme;
     });
@@ -124,6 +126,25 @@ class _NotePageState extends State<NotePage> {
       _isDayTheme = !_isDayTheme;
     });
     _saveThemePreference();
+  }
+
+  Future<void> _maybeShowFirstLaunchInstructions() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSeenInstructions = prefs.getBool('hasSeenInstructions') ?? false;
+    if (hasSeenInstructions || !mounted) return;
+
+    // Skip for users who already used the app before this feature was added
+    if (prefs.containsKey('notes') || prefs.containsKey('isDayTheme')) {
+      await prefs.setBool('hasSeenInstructions', true);
+      return;
+    }
+
+    await prefs.setBool('hasSeenInstructions', true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _showInstructionsModal(context);
+      }
+    });
   }
 
   // Load notes from SharedPreferences

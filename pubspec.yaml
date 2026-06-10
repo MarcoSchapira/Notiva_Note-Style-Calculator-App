@@ -37,10 +37,11 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_launcher_icons: ^0.13.1
 
-flutter_icons:
+flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/DALL-E-2024-12-08-app-icon.png" # Path to your app icon
+  image_path: "assets/Notiva_icon_final.png"
+  remove_alpha_ios: true
 
 flutter:
   uses-material-design: true
